@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arun Pharmacy Inventory & Purchase Manager</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#fff;--ink:#12303a;--mut:#58737d;--blue:#0b6fb8;--green:#16875c;--line:#d5e4ea;--soft:#f0f8fb;--warn:#b45309;--bad:#b91c1c;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1f;--ink:#e6f1f5;--mut:#92acb6;--blue:#5bb4f0;--green:#4cc79a;--line:#28404a;--soft:#16262d;--warn:#f0a35b;--bad:#f28b8b;--on:#0f1a1f}}
+:root[data-theme="dark"]{--bg:#0f1a1f;--ink:#e6f1f5;--mut:#92acb6;--blue:#5bb4f0;--green:#4cc79a;--line:#28404a;--soft:#16262d;--warn:#f0a35b;--bad:#f28b8b;--on:#0f1a1f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Atkinson Hyperlegible",system-ui,"Segoe UI",Arial,sans-serif}
+h1,h2,h3{margin:0}h2{font-size:1.35rem;margin-bottom:.6rem}h3{font-size:1.1rem}
+header{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;padding:.8rem 1rem;border-bottom:3px solid var(--green)}
+header h1{font-size:1.25rem;color:var(--blue)}header small{color:var(--mut)}header .sp{flex:1}
+nav{display:flex;gap:.3rem;overflow-x:auto;padding:.5rem 1rem;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+nav button{white-space:nowrap;border:0;background:none;color:var(--ink);font:inherit;padding:.6rem 1rem;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--blue);color:var(--on);font-weight:700}
+main{padding:1rem;max-width:1100px;margin:0 auto}
+.btn,button.btn{font:inherit;border:2px solid var(--blue);background:var(--bg);color:var(--blue);border-radius:10px;padding:.65rem 1.1rem;cursor:pointer;min-height:48px}
+.btn.pri{background:var(--blue);color:var(--on)}.btn.grn{background:var(--green);border-color:var(--green);color:var(--on)}.btn.bad{border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:.25rem .6rem;min-height:36px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:.55rem .6rem;width:100%;min-height:46px}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+label{display:flex;flex-direction:column;gap:.2rem;font-size:.9rem;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin:.8rem 0}.row>*{flex:0 0 auto}.row .grow{flex:1 1 200px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem;margin-bottom:1.2rem}
+.stat{background:var(--soft);border-left:5px solid var(--green);border-radius:8px;padding:.7rem .9rem}.stat b{display:block;font-size:1.55rem}.stat span{color:var(--mut);font-size:.9rem}
+.stat.w{border-color:var(--warn)}.stat.b{border-color:var(--blue)}
+.line{border:2px solid var(--line);border-radius:12px;padding:.8rem;margin:.7rem 0}.line header{border:0;padding:0 0 .5rem}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}th,td{padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}th{background:var(--soft);color:var(--blue)}td.n,th.n{text-align:right}
+.tag{display:inline-block;padding:.05rem .5rem;border-radius:99px;font-size:.85rem;border:1px solid currentColor}.tag.bad{color:var(--bad)}.tag.warn{color:var(--warn)}.tag.ok{color:var(--green)}
+.empty{padding:1.4rem;text-align:center;color:var(--mut);border:2px dashed var(--line);border-radius:10px}
+dialog{border:2px solid var(--blue);border-radius:14px;background:var(--bg);color:var(--ink);max-width:min(560px,94vw);width:100%;padding:1rem}
+dialog::backdrop{background:rgba(0,0,0,.5)}video{width:100%;border-radius:10px;background:#000;max-height:55vh}
+#toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.7rem 1.1rem;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;z-index:20}
+#toast.on{opacity:1}
+#login{max-width:420px;margin:12vh auto;padding:1.2rem}#login h1{color:var(--blue);margin-bottom:.3rem}
+.note{color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<div id="login">
+<h1>Arun Pharmacy</h1><p class="note">Inventory & Purchase Manager</p>
+<form id="lf" class="grid" style="grid-template-columns:1fr">
+<label>Sign in as<select id="lr"><option value="admin">Admin (full access)</option><option value="staff">Staff (scan and add purchases)</option></select></label>
+<label>PIN<input id="lp" type="password" inputmode="numeric" autocomplete="off"></label>
+<button class="btn pri" type="submit">Sign in</button>
+<p class="note" id="lm">First time: Admin PIN 1234, Staff PIN 0000. Change them in Settings.</p>
+</form></div>
+<div id="app" hidden>
+<header><h1>Arun Pharmacy</h1><small>Inventory & Purchase Manager</small><span class="sp"></span><span id="who" class="tag ok"></span><button class="btn sm" data-a="out">Sign out</button></header>
+<nav id="nav"></nav><main id="view"></main></div>
+<dialog id="dlg"></dialog><div id="toast" role="status"></div>
+<script>
+const KEY='arun_pharm_v1',$=s=>document.querySelector(s);
+let S={meds:{},p:[],low:20,pins:{admin:'1234',staff:'0000'}};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const dmy=s=>s?s.slice(8,10)+'-'+s.slice(5,7)+'-'+s.slice(0,4):'';
+const my=s=>s?s.slice(5,7)+'/'+s.slice(0,4):'';
+const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lt=p=>+((+p.qty||0)*(+p.rate||0)*(1-(+p.disc||0)/100)*(1+(+p.gst||0)/100)).toFixed(2);
+const expD=s=>!s?null:(s.length==7?new Date(+s.slice(0,4),+s.slice(5,7),0):new Date(s));
+const days=s=>{const d=expD(s);return d?Math.floor((d-new Date(today()+'T00:00:00'))/864e5):9e9};
+const uid=()=>'p'+Date.now().toString(36)+Math.floor(Math.random()*1e5).toString(36);
+let role=null,tab='dash',hq='',sq='',er=90,draft={date:today(),supplier:'',invoice:'',lines:[]};
+const TABS=[['dash','Dashboard'],['buy','Purchase Entry'],['ent','Entries'],['stk','Stock'],['exp','Expiry Alert'],['rep','Reports'],['set','Settings']];
+
+function stock(){const m=new Map();for(const p of S.p){const k=(p.barcode||p.name.toLowerCase())+'|'+p.batch.toUpperCase();let r=m.get(k);if(!r){r={name:p.name,barcode:p.barcode,batch:p.batch,qty:0,key:k};m.set(k,r)}r.qty+=+p.qty;Object.assign(r,{name:p.name,exp:p.exp,rate:p.rate,mrp:p.mrp})}return[...m.values()].sort((a,b)=>a.name.localeCompare(b.name))}
+function meds(st){const m=new Map();for(const r of st){const k=r.barcode||r.name.toLowerCase();const x=m.get(k)||{name:r.name,qty:0};x.qty+=r.qty;m.set(k,x)}return[...m.values()]}
+const sv=r=>r.qty*(+r.rate||0);
+function badge(e){const d=days(e);return d<0?'<span class="tag bad">Expired</span>':d<=90?`<span class="tag bad">${d} days</span>`:d<=180?`<span class="tag warn">${d} days</span>`:`<span class="tag ok">${d>=9e8?'-':d+' days'}</span>`}
+const tbl=(h,rows,nums=[])=>rows.length?`<div class="wrap"><table><thead><tr>${h.map((x,i)=>`<th class="${nums.includes(i)?'n':''}">${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${nums.includes(i)?'n':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">Nothing to show yet.</div>';
+function toast(t){const e=$('#toast');e.textContent=t;e.className='on';clearTimeout(toast.t);toast.t=setTimeout(()=>e.className='',3200)}
+const dlg=$('#dlg');
+function modal(h){dlg.innerHTML=h;if(!dlg.open)dlg.showModal()}
+dlg.addEventListener('close',()=>{stopScan();if(tab==='buy')render()});
+
+/* ---------- views ---------- */
+function vDash(){const st=stock().filter(r=>r.qty>0),ms=meds(st),low=ms.filter(m=>m.qty<S.low),ex=st.filter(r=>days(r.exp)<=90),t=today();
+const ta=S.p.filter(p=>p.date===t).reduce((a,p)=>a+lt(p),0),rec=[...S.p].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,6);
+return `<h2>Dashboard</h2><div class="stats"><div class="stat"><b>${ms.length}</b><span>Medicines available</span></div><div class="stat"><b>${st.reduce((a,r)=>a+r.qty,0)}</b><span>Units in stock</span></div><div class="stat b"><b>${inr(st.reduce((a,r)=>a+sv(r),0))}</b><span>Stock value</span></div><div class="stat w"><b>${low.length}</b><span>Low stock (below ${S.low})</span></div><div class="stat w"><b>${ex.length}</b><span>Batches expiring in 3 months</span></div><div class="stat b"><b>${inr(ta)}</b><span>Purchased today</span></div></div>
+<h3>Recent purchases</h3>${tbl(['Date','Invoice','Medicine','Batch','Qty','Total'],rec.map(p=>[dmy(p.date),esc(p.invoice),esc(p.name),esc(p.batch),p.qty,inr(lt(p))]),[4,5])}
+<h3 style="margin-top:1rem">Low stock medicines</h3>${tbl(['Medicine','Units left'],low.map(m=>[esc(m.name),`<span class="tag bad">${m.qty}</span>`]),[1])}
+${S.p.length?'':'<p class="note">Start with Purchase Entry, or load sample data in Settings to try the app.</p>'}`}
+
+function vBuy(){const d=draft,g=d.lines.reduce((a,p)=>a+lt(p),0);
+const F=(i,l,f,t='text',x='')=>`<label>${l}<input type="${t}" data-i="${i}" data-f="${f}" value="${esc(d.lines[i][f])}" ${x}></label>`;
+return `<h2>Purchase Entry</h2><div class="grid"><label>Date<input type="date" data-h="date" value="${d.date}"></label><label>Supplier<input data-h="supplier" value="${esc(d.supplier)}" placeholder="Supplier name"></label><label>Invoice no<input data-h="invoice" value="${esc(d.invoice)}" placeholder="Invoice number"></label></div>
+<div class="row"><button class="btn grn" data-a="scan">Scan medicine</button><label class="grow">Or type a barcode<input id="bc" inputmode="numeric" placeholder="Barcode, then press Add"></label><button class="btn" data-a="addbc">Add</button><button class="btn" data-a="blank">Add without barcode</button></div>
+${d.lines.length?d.lines.map((l,i)=>`<div class="line"><header><h3>${esc(l.name)||'New medicine'}</h3><small>${esc(l.barcode)}${l.mfr?' · '+esc(l.mfr):''}</small><span class="sp"></span><b id="lt${i}">${inr(lt(l))}</b><button class="btn bad sm" data-a="rl" data-i="${i}">Remove</button></header><div class="grid">${F(i,'Medicine name','name')}${F(i,'Batch no','batch')}${F(i,'Mfg (month)','mfg','month')}${F(i,'Expiry (month)','exp','month')}${F(i,'Quantity','qty','number','min="1" inputmode="numeric"')}${F(i,'Purchase rate','rate','number','step="any" inputmode="decimal"')}${F(i,'MRP','mrp','number','step="any" inputmode="decimal"')}${F(i,'Discount %','disc','number','step="any"')}${F(i,'GST %','gst','number','step="any"')}</div></div>`).join(''):'<div class="empty">Scan the first medicine to start this purchase list.</div>'}
+<div class="row"><h3 class="grow">${d.lines.length} items · Grand total <span id="gt">${inr(g)}</span></h3><button class="btn pri" data-a="savebuy" ${d.lines.length?'':'disabled'}>Save purchase</button></div>`}
+
+function entRows(){const q=hq.toLowerCase(),t=today();const r=S.p.filter(p=>!q||[p.name,p.batch,p.supplier,p.invoice,dmy(p.date),my(p.exp),p.barcode].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+return tbl(['Date','Invoice','Supplier','Medicine','Batch','Expiry','Qty','Rate','Total',''],r.map(p=>[dmy(p.date),esc(p.invoice),esc(p.supplier),esc(p.name),esc(p.batch),my(p.exp),p.qty,inr(p.rate),inr(lt(p)),(role==='admin'||p.date===t?`<button class="btn sm" data-a="edit" data-id="${p.id}">Edit</button> `:'')+(role==='admin'?`<button class="btn bad sm" data-a="del" data-id="${p.id}">Delete</button>`:'')]),[6,7,8])}
+const vEnt=()=>`<h2>Purchase Entries</h2><label>Search medicine, batch, supplier, invoice, date or expiry<input id="q" value="${esc(hq)}"></label><div id="rows" style="margin-top:.7rem">${entRows()}</div>${role==='staff'?'<p class="note">Staff can edit entries made today. Deleting needs the admin.</p>':''}`;
+function stkRows(){const q=sq.toLowerCase(),low=new Set(meds(stock()).filter(m=>m.qty<S.low).map(m=>m.name));return tbl(['Medicine','Barcode','Batch','Expiry','Left','Rate','MRP','Value'],stock().filter(r=>r.qty>0&&(!q||[r.name,r.batch,r.barcode,my(r.exp)].join(' ').toLowerCase().includes(q))).map(r=>[esc(r.name)+(low.has(r.name)?' <span class="tag warn">Low</span>':''),esc(r.barcode),esc(r.batch),my(r.exp)+' '+badge(r.exp),r.qty,inr(r.rate),inr(r.mrp),inr(sv(r))]),[4,5,6,7])}
+const vStk=()=>`<h2>Stock (batch-wise)</h2><label>Search medicine, batch, barcode or expiry<input id="sq" value="${esc(sq)}"></label><div id="srows" style="margin-top:.7rem">${stkRows()}</div>`;
+function expRows(){const st=stock().filter(r=>r.qty>0&&(er<0?days(r.exp)<0:days(r.exp)<=er)).sort((a,b)=>days(a.exp)-days(b.exp));return tbl(['Medicine','Batch','Expiry','Left','Units','Value'],st.map(r=>[esc(r.name),esc(r.batch),my(r.exp),badge(r.exp),r.qty,inr(sv(r))]),[4,5])}
+const vExp=()=>`<h2>Expiry Alert</h2><div class="row">${[[-1,'Expired'],[90,'3 months'],[180,'6 months'],[365,'1 year']].map(([v,l])=>`<button class="btn ${er===v?'pri':''}" data-a="er" data-v="${v}">${l}</button>`).join('')}</div><div id="erows">${expRows()}</div>`;
+const vRep=()=>`<h2>Reports (Excel)</h2><div class="grid"><label>Daily report date<input type="date" id="rd" value="${today()}"></label><label>Month<input type="month" id="rm" value="${today().slice(0,7)}"></label><label>Supplier<select id="rs">${[...new Set(S.p.map(p=>p.supplier))].sort().map(s=>`<option>${esc(s)}</option>`).join('')||'<option value="">No suppliers yet</option>'}</select></label></div><div class="row"><button class="btn pri" data-a="x-day">Daily purchases</button><button class="btn pri" data-a="x-mon">Monthly purchases</button><button class="btn pri" data-a="x-sup">Supplier-wise</button><button class="btn grn" data-a="x-stk">Stock report</button><button class="btn grn" data-a="x-exp">Expiry report</button></div><p class="note">Files are named like Arun_Pharmacy_Purchase_${dmy(today())}.xlsx and end with a Grand total formula row.</p>`;
+const vSet=()=>`<h2>Settings</h2><div class="grid"><label>Low stock below (units)<input type="number" id="sl" value="${S.low}"></label><label>Admin PIN<input id="pa" value="${esc(S.pins.admin)}"></label><label>Staff PIN<input id="ps" value="${esc(S.pins.staff)}"></label></div><div class="row"><button class="btn pri" data-a="setsave">Save settings</button><button class="btn" data-a="backup">Backup data (JSON)</button><label class="btn" style="cursor:pointer;min-height:48px">Restore backup<input type="file" id="rf" accept=".json" hidden></label><button class="btn" data-a="sample">Load sample data</button><button class="btn bad" data-a="reset">Erase all data</button></div><p class="note">Data is kept in this browser on this device. Use Backup regularly. Sync between phone and computer needs a server database, see the notes after the app.</p>`;
+const V={dash:vDash,buy:vBuy,ent:vEnt,stk:vStk,exp:vExp,rep:vRep,set:vSet};
+function render(){const ok=TABS.filter(t=>role==='admin'||!['rep','set'].includes(t[0]));if(!ok.some(t=>t[0]===tab))tab='dash';
+$('#nav').innerHTML=ok.map(([k,l])=>`<button class="${k===tab?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('');$('#view').innerHTML=V[tab]();$('#who').textContent=role==='admin'?'Admin':'Staff'}
+
+/* ---------- purchase list & scanning ---------- */
+function addLine(code,focus){const m=S.meds[code]||{};draft.lines.push({barcode:code||'',name:m.name||'',mfr:m.mfr||'',batch:'',mfg:'',exp:'',qty:1,rate:m.rate||'',mrp:m.mrp||'',disc:0,gst:m.gst??12});if(tab==='buy'&&!dlg.open)render()}
+let stream=null,scanOn=false;
+async function openScan(){if(!('BarcodeDetector' in window)){toast('This browser cannot scan. Type the barcode and press Add, or open the app in Chrome on Android.');return}
+modal('<video id="vid" playsinline muted></video><p id="sm" aria-live="polite">Point the camera at a barcode.</p><button class="btn pri" data-a="close">Done</button>');
+try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const v=$('#vid');v.srcObject=stream;await v.play();const det=new BarcodeDetector();scanOn=true;let last='',t0=0;
+while(scanOn){try{const r=await det.detect(v);if(r.length){const c=r[0].rawValue,n=Date.now();if(c!==last||n-t0>3000){last=c;t0=n;addLine(c);navigator.vibrate&&navigator.vibrate(60);const e=$('#sm');if(e)e.textContent='Added '+(S.meds[c]?.name||c)+'. '+draft.lines.length+' items so far.'}}}catch(e){}await new Promise(r=>setTimeout(r,250))}
+}catch(e){const s=$('#sm');if(s)s.textContent='The camera is blocked. Allow camera access, or type the barcode.'}}
+function stopScan(){scanOn=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null}
+
+function savePurchase(){const d=draft;if(!d.supplier.trim()||!d.invoice.trim())return toast('Enter the supplier name and invoice number.');
+for(const [i,l] of d.lines.entries()){if(!l.name.trim()||!l.batch.trim()||!l.exp||!(+l.qty>0)||l.rate==='')return toast('Item '+(i+1)+': fill medicine, batch, expiry, quantity and rate.')}
+for(const l of d.lines){if(l.barcode)S.meds[l.barcode]={name:l.name.trim(),mfr:l.mfr,rate:l.rate,mrp:l.mrp,gst:l.gst};
+S.p.push({id:uid(),date:d.date,supplier:d.supplier.trim(),invoice:d.invoice.trim(),barcode:l.barcode,name:l.name.trim(),batch:l.batch.trim(),mfg:l.mfg,exp:l.exp,qty:+l.qty,rate:+l.rate,mrp:+l.mrp||0,disc:+l.disc||0,gst:+l.gst||0,by:role})}
+save();toast(d.lines.length+' items saved. Stock updated.');draft={date:today(),supplier:'',invoice:'',lines:[]};render()}
+
+function editDlg(id){const p=S.p.find(x=>x.id===id);if(!p)return;const F=(l,f,t='text',x='')=>`<label>${l}<input type="${t}" data-e="${f}" value="${esc(p[f])}" ${x}></label>`;
+modal(`<h3>Edit entry</h3><div class="grid" style="margin:.7rem 0">${F('Date','date','date')}${F('Invoice no','invoice')}${F('Supplier','supplier')}${F('Medicine','name')}${F('Batch no','batch')}${F('Mfg','mfg','month')}${F('Expiry','exp','month')}${F('Quantity','qty','number','min="1"')}${F('Rate','rate','number','step="any"')}${F('MRP','mrp','number','step="any"')}${F('Discount %','disc','number','step="any"')}${F('GST %','gst','number','step="any"')}</div><div class="row"><button class="btn" data-a="close">Cancel</button><button class="btn pri" data-a="saveedit" data-id="${id}">Save changes</button></div>`)}
+function saveEdit(id){const p=S.p.find(x=>x.id===id),o={...p};const n={};dlg.querySelectorAll('[data-e]').forEach(e=>n[e.dataset.e]=e.value);
+if(!n.name.trim()||!n.batch.trim()||!n.exp||!(+n.qty>0))return toast('Medicine, batch, expiry and quantity are required.');
+Object.assign(p,n,{qty:+n.qty,rate:+n.rate||0,mrp:+n.mrp||0,disc:+n.disc||0,gst:+n.gst||0});save();
+const same=o.name===p.name&&o.batch.toUpperCase()===p.batch.toUpperCase(),dq=p.qty-o.qty;
+toast(same?(dq?'Stock '+(dq>0?'increased':'reduced')+' by '+Math.abs(dq)+'.':'Entry updated.'):'Entry updated. Stock moved to '+p.name+' batch '+p.batch+'.');dlg.close();render()}
+
+/* ---------- Excel ---------- */
+async function xl(name,head,rows,sheet,sum){if(!window.XLSX)return toast('The Excel library did not load. Check your connection.');if(!rows.length)return toast('No data for this report.');
+const ws=XLSX.utils.aoa_to_sheet([head,...rows]),n=rows.length;
+if(sum!=null){const c=XLSX.utils.encode_col(sum),l=XLSX.utils.encode_col(Math.max(0,sum-1));ws[l+(n+2)]={t:'s',v:'Grand total'};ws[c+(n+2)]={t:'n',f:`SUM(${c}2:${c}${n+1})`};ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:n+1,c:head.length-1}})}
+ws['!cols']=head.map(h=>({wch:Math.max(13,h.length+3)}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheet);
+await saveFile(name,XLSX.write(wb,{bookType:'xlsx',type:'array'}))}
+async function saveFile(filename,data){let dl=null;try{dl=window.claude?await claude.use('downloads'):null}catch(e){}
+if(!dl)return toast('Downloads are not available in this view.');try{await dl.save({filename,data});toast('Saved '+filename)}catch(e){if(e.code!=='declined')toast('Could not save the file.')}}
+const PH=['Date','Invoice No','Supplier','Medicine Name','Batch No','Expiry Date','Quantity','Purchase Rate','MRP','GST','Total Amount'];
+const PR=p=>[dmy(p.date),p.invoice,p.supplier,p.name,p.batch,my(p.exp),p.qty,p.rate,p.mrp,p.gst+'%',lt(p)];
+async function exportIt(k){const t=today();
+if(k==='day'){const d=$('#rd').value;await xl(`Arun_Pharmacy_Purchase_${dmy(d)}.xlsx`,PH,S.p.filter(p=>p.date===d).map(PR),'Daily',10)}
+if(k==='mon'){const m=$('#rm').value;await xl(`Arun_Pharmacy_Purchase_${m.slice(5)}-${m.slice(0,4)}.xlsx`,PH,S.p.filter(p=>p.date.startsWith(m)).map(PR),'Monthly',10)}
+if(k==='sup'){const s=$('#rs').value;await xl(`Arun_Pharmacy_Supplier_${s.replace(/[^\w]+/g,'_')}_${dmy(t)}.xlsx`,PH,S.p.filter(p=>p.supplier===s).map(PR),'Supplier',10)}
+if(k==='stk')await xl(`Arun_Pharmacy_Stock_${dmy(t)}.xlsx`,['Medicine','Barcode','Batch No','Expiry Date','Quantity','Purchase Rate','MRP','Stock Value'],stock().filter(r=>r.qty>0).map(r=>[r.name,r.barcode,r.batch,my(r.exp),r.qty,r.rate,r.mrp,+sv(r).toFixed(2)]),'Stock',7);
+if(k==='exp')await xl(`Arun_Pharmacy_Expiry_${dmy(t)}.xlsx`,['Medicine','Batch No','Expiry Date','Days Left','Quantity','Stock Value'],stock().filter(r=>r.qty>0&&days(r.exp)<=365).sort((a,b)=>days(a.exp)-days(b.exp)).map(r=>[r.name,r.batch,my(r.exp),days(r.exp),r.qty,+sv(r).toFixed(2)]),'Expiry',5)}
+
+function sample(){const m=n=>{const d=new Date();d.setMonth(d.getMonth()+n);return d.getFullYear()+'-'+pad(d.getMonth()+1)},t=today();
+[['8901030000011','Paracetamol 500mg Tab','A123',2,100,1.2,2,5],['8901030000011','Paracetamol 500mg Tab','A123',2,50,1.2,2,5],['8901030000028','Amoxicillin 250mg Cap','B771',14,200,4.5,7.5,12],['8901030000035','Cetirizine 10mg Tab','C402',5,15,0.9,1.8,12],['8901030000042','ORS Sachet','D019',20,12,14,22,5]].forEach(([b,n,bt,e,q,r,mrp,g],i)=>{S.meds[b]={name:n,mfr:'Sample Pharma',rate:r,mrp,gst:g};S.p.push({id:uid()+i,date:t,supplier:'Sri Medical Agencies',invoice:'INV-'+(1001+(i>1?1:0)),barcode:b,name:n,batch:bt,mfg:m(-6),exp:m(e),qty:q,rate:r,mrp,disc:0,gst:g,by:'admin'})});save();render();toast('Sample data added.')}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+if(a==='tab'){tab=b.dataset.v;render()}else if(a==='out'){role=null;$('#app').hidden=true;$('#login').hidden=false;$('#lp').value=''}
+else if(a==='close')dlg.close();else if(a==='scan')openScan();
+else if(a==='addbc'){const v=$('#bc').value.trim();if(v){addLine(v)}else toast('Type a barcode first.')}else if(a==='blank')addLine('');
+else if(a==='rl'){draft.lines.splice(+b.dataset.i,1);render()}else if(a==='savebuy')savePurchase();
+else if(a==='edit')editDlg(id);else if(a==='saveedit')saveEdit(id);
+else if(a==='del'){const p=S.p.find(x=>x.id===id);modal(`<h3>Delete this entry?</h3><p>${esc(p.name)}, batch ${esc(p.batch)}, invoice ${esc(p.invoice)}.<br>Stock for this batch will reduce by <b>${p.qty}</b>.</p><div class="row"><button class="btn" data-a="close">Keep it</button><button class="btn bad" data-a="delok" data-id="${id}">Delete entry</button></div>`)}
+else if(a==='delok'){S.p=S.p.filter(x=>x.id!==id);save();dlg.close();toast('Entry deleted. Stock adjusted.');render()}
+else if(a==='er'){er=+b.dataset.v;render()}else if(a.startsWith('x-'))exportIt(a.slice(2));
+else if(a==='setsave'){S.low=+$('#sl').value||0;S.pins={admin:$('#pa').value||'1234',staff:$('#ps').value||'0000'};save();toast('Settings saved.')}
+else if(a==='backup')saveFile(`Arun_Pharmacy_Backup_${dmy(today())}.json`,JSON.stringify(S));
+else if(a==='sample')sample();
+else if(a==='reset')modal('<h3>Erase all data?</h3><p>All purchases and stock on this device will be removed. Make a backup first.</p><div class="row"><button class="btn" data-a="close">Cancel</button><button class="btn bad" data-a="resetok">Erase everything</button></div>');
+else if(a==='resetok'){const p=S.pins,l=S.low;S={meds:{},p:[],low:l,pins:p};save();dlg.close();render()}});
+document.addEventListener('input',e=>{const t=e.target;
+if(t.dataset.h)draft[t.dataset.h]=t.value;
+else if(t.dataset.i!=null){const l=draft.lines[+t.dataset.i];l[t.dataset.f]=t.value;$('#lt'+t.dataset.i).textContent=inr(lt(l));$('#gt').textContent=inr(draft.lines.reduce((a,p)=>a+lt(p),0))}
+else if(t.id==='q'){hq=t.value;$('#rows').innerHTML=entRows()}else if(t.id==='sq'){sq=t.value;$('#srows').innerHTML=stkRows()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='bc'){e.preventDefault();const v=e.target.value.trim();if(v)addLine(v)}});
+document.addEventListener('change',e=>{if(e.target.id==='rf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.p))throw 0;S=Object.assign({meds:{},p:[],low:20,pins:S.pins},d);save();render();toast('Backup restored.')}catch(x){toast('That file is not an Arun Pharmacy backup.')}};r.readAsText(f)}});
+$('#lf').addEventListener('submit',e=>{e.preventDefault();const r=$('#lr').value;if($('#lp').value===S.pins[r]){role=r;$('#login').hidden=true;$('#app').hidden=false;tab='dash';render()}else{$('#lm').textContent='That PIN is not correct. Try again.'}});
+</script>
+</body>
+</html>
